@@ -1,0 +1,5 @@
+* fmt -- extensible formatting library
+
+- Copyright (c) 2006-2009 Alex Shinn.  All rights reserved.
+-- BSD-style license: http://synthcode.com/license.txt
+-- Ported to Common Lisp by CHIBA Masaomi.
