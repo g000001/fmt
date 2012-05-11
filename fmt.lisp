@@ -113,7 +113,7 @@
 (define-function (fmt-set-ellipses! st x) (vector-set! st 12 x) st)
 
 (define-function (fmt-ref st key . o)
-  (case key
+  (cl:case key
     ((row) (fmt-row st))
     ((col) (fmt-col st))
     ((radix) (fmt-radix st))
@@ -139,7 +139,7 @@
                (cons (cons key val) (fmt-properties st)) ))))
 
 (define-function (fmt-set! st key val)
-  (case key
+  (cl:case key
     ((row) (fmt-set-row! st val))
     ((col) (fmt-set-col! st val))
     ((radix) (fmt-set-radix! st val))
@@ -153,7 +153,7 @@
     ((decimal-align) (fmt-set-decimal-align! st val))
     ((string-width) (fmt-set-string-width! st val))
     ((ellipses) (fmt-set-ellipses! st val))
-    (:else (fmt-set-property! st key val)) ))
+    (otherwise (fmt-set-property! st key val)) ))
 
 (define-function (fmt-add-properties! st alist)
   (for-each (lambda (x) (fmt-set! st (car x) (cdr x))) alist)
@@ -165,7 +165,8 @@
       (fmt-set! (funcall (apply-cat ls) (fmt-set! st key val)) key orig-val) )))
 
 (define-function (fmt-bind key val . ls)
-  (lambda (st) (funcall (apply-cat ls) (fmt-set! st key val))) )
+  (lambda (st)
+    (funcall (apply-cat ls) (fmt-set! st key val))) )
 
 (define-function (fix prec . ls) (fmt-let 'precision prec (apply-cat ls)))
 (define-function (radix rad . ls) (fmt-let 'radix rad (apply-cat ls)))
@@ -390,7 +391,7 @@
 (define-function (fmt-join fmt ls . o)
   (let ((sep (dsp (if (pair? o) (car o) ""))))
     (lambda (st)
-      (declare (type vector st))
+      (declare (type cl:vector st))
       (if (null? ls)
           st
           (let lp ((ls (cdr ls))
@@ -617,7 +618,7 @@
                   (diff (- (+ str-width ell-len) width)))
              (if (negative? diff)
                  ell
-                 (string-append ell (substring/shared str diff))))
+                 (string-append  ell (substring/shared str diff))))
            (substring/shared str diff))))))
 
 (define-function (trim/both width . ls)
@@ -700,7 +701,7 @@
             (expt b k) )))))
 
 (define-function (mirror-of c)
-  (case c ((#\() #\)) ((#\[) #\]) ((#\{) #\}) ((#\<) #\>) (otherwise c)) )
+  (cl:case c ((#\() #\)) ((#\[) #\]) ((#\{) #\}) ((#\<) #\>) (otherwise c)) )
 
 (defvar default-digits
   (list->vector (string->list "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")) )
@@ -1186,7 +1187,7 @@
                               (write-prefix prefix align k)
                               (cond
                                 ((and (not digits) (or (> k 14) (< k -4)))
-                                 (write n :stream port) )      ; XXXX native write for sci
+                                 (write n port) )      ; XXXX native write for sci
                                 ;;((and (not digits) (> k 14))
                                 ;; (generate-sci r s m+ m- k))
                                 ;;((and (not digits) (< k -4))
@@ -1592,7 +1593,7 @@
 
 (define-function (fmt-write-string str)
   (flet ((rename (c)
-           (case c
+           (cl:case c
              ;; ((#\newline) "n")
              ;; ((#\newline) (string #\Newline))
              (otherwise nil) )))

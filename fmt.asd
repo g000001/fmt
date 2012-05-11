@@ -5,6 +5,7 @@
 (defsystem :fmt
   :serial t
   :depends-on (:fiveam
+               :rnrs-compat
                :srfi-1
                :srfi-5
                :srfi-6
@@ -18,6 +19,7 @@
                (:file "decls")
                (:file "mantissa")
                (:file "fmt")
+               (:file "fmt-pretty")
                (:file "test")))
 
 (defmethod perform ((o test-op) (c (eql (find-system :fmt))))

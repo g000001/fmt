@@ -23,7 +23,7 @@
    :cpp-wrap-header :js-expr :js-function :js-var :js-comment))
 
 (defpackage :fmt.internal
-  (:use :fmt :cl :fiveam :srfi-23 :srfi-69 :srfi-26)
+  (:use :fmt :rnrs-user :fiveam :srfi-23 :srfi-69 :srfi-26)
   (:shadowing-import-from :srfi-23 :error)
   (:shadowing-import-from :srfi-5 :let)
   (:shadowing-import-from :srfi-61 :cond)
@@ -35,4 +35,5 @@
                           . #.(let ((ans '()))
                                 (do-external-symbols (s :srfi-13 ans)
                                   (push s ans))))
-  (:shadow :assoc :lambda :loop))
+  ;; (:shadow :assoc :lambda :loop)
+  (:shadowing-import-from :rnrs :string-append))
