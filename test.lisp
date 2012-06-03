@@ -76,18 +76,17 @@ world")))
   (iss "0.0000040" (fmt nil (num 0.000004 10 7)))
   (iss "0.00000400" (fmt nil (num 0.000004 10 8)))
   ;; (iss "0.000004" (fmt nil (num 0.000004)))
-#||
-  (iss "   3.14159" (fmt nil (decimal-align 5 (num 3.14159))))
-  (iss "  31.4159" (fmt nil (decimal-align 5 (num 31.4159))))
-  (iss " 314.159" (fmt nil (decimal-align 5 (num 314.159))))
-  (iss "3141.59" (fmt nil (decimal-align 5 (num 3141.59))))
-  (iss "31415.9" (fmt nil (decimal-align 5 (num 31415.9))))
-  (iss "  -3.14159" (fmt nil (decimal-align 5 (num -3.14159))))
-  (iss " -31.4159" (fmt nil (decimal-align 5 (num -31.4159))))
-  (iss "-314.159" (fmt nil (decimal-align 5 (num -314.159))))
-  (iss "-3141.59" (fmt nil (decimal-align 5 (num -3141.59))))
-  (iss "-31415.9" (fmt nil (decimal-align 5 (num -31415.9))))
-||#
+  (iss "   3.14159" (fmt nil (decimal-align 5 (num 3.14159d0))))
+  (iss "  31.4159" (fmt nil (decimal-align 5 (num 31.4159d0))))
+  (iss " 314.159" (fmt nil (decimal-align 5 (num 314.159d0))))
+  (iss "3141.59" (fmt nil (decimal-align 5 (num 3141.59d0))))
+  (iss "31415.9" (fmt nil (decimal-align 5 (num 31415.9d0))))
+  (iss "  -3.14159" (fmt nil (decimal-align 5 (num -3.14159d0))))
+  (iss " -31.4159" (fmt nil (decimal-align 5 (num -31.4159d0))))
+  (iss "-314.159" (fmt nil (decimal-align 5 (num -314.159d0))))
+  (iss "-3141.59" (fmt nil (decimal-align 5 (num -3141.59d0))))
+  (iss "-31415.9" (fmt nil (decimal-align 5 (num -31415.9d0))))
+
   (cond
    ((exact? (/ 1 3)) ;; exact rationals
     (iss "333.333333333333333333333333333333" (fmt nil (fix 30 1000/3)))
@@ -113,19 +112,17 @@ world")))
   (iss "-11.75" (fmt nil (num (/ -47 4) 10 2)))
 
   (iss "(#x11 #x22 #x33)" (fmt nil (radix 16 '(#x11 #x22 #x33))))
-#||
   (iss "299,792,458" (fmt nil (num 299792458 10 nil nil T)))
   (iss "299,792,458" (fmt nil (num/comma 299792458)))
   (iss "299.792.458" (fmt nil (comma-char #\. (num/comma 299792458))))
-  (iss "299.792.458,0" (fmt nil (comma-char #\. (num/comma 299792458.0))))
-||#
+  (iss "299.792.458,0" (fmt nil (comma-char #\. (num/comma 299792458.0d0))))
   (iss "100,000" (fmt nil (num 100000 10 0 nil 3)))
   (iss "100,000.0" (fmt nil (num 100000 10 1 nil 3)))
   (iss "100,000.00" (fmt nil (num 100000 10 2 nil 3)))
 
-  ;(iss "1.23" (fmt nil (fix 2 (num/fit 4 1.2345))))
+  (iss "1.23" (fmt nil (fix 2 (num/fit 4 1.2345d0))))
   (iss "1.00" (fmt nil (fix 2 (num/fit 4 1))))
-  (iss "#.##" (fmt nil (fix 2 (num/fit 4 12.345))))
+  (iss "#.##" (fmt nil (fix 2 (num/fit 4 12.345d0))))
 
   ;; (cond
   ;;  ((feature? 'full-numeric-tower)

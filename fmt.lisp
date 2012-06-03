@@ -1174,7 +1174,8 @@
                               (let ((est (inexact->exact
                                           (ceiling (- (* (+ e (integer-length* f) -1)
                                                          (invlog2of base) )
-                                                      1.0e-10 )))))
+                                                      ;; 1.0e-10
+                                                      1.0d-10 )))))
                                 (if (not (negative? est))
                                     (fixup r (* s (fast-expt base est)) m+ m- est)
                                     (let ((skale (fast-expt base (- est))))
@@ -1182,7 +1183,7 @@
                             (fixup (r s m+ m- k)
                               (if (and (funcall bigger (+ r m+) s)) ;; (or digits (>= k -4))
                                   (lead r s m+ m- (+ k 1))
-                                  (lead (* r base) s (* m+ base) (* m- base) k) ))
+                                  (lead (* r base) s (* m+ base) (* m- base) k)))
                             (lead (r s m+ m- k)
                               (write-prefix prefix align k)
                               (cond
@@ -1297,15 +1298,15 @@
                      (cond
                        ((negative? e)
                         (if (or (= e *min-e*) (not (= f *bot-f*)))
-                            (scale (* f 2) (* (expt 2.0 (- e)) 2) 1 1 0 f e)
-                            (scale (* f 2 2) (* (expt 2.0 (- 1 e)) 2) 2 1 0 f e) ))
+                            (scale (* f 2) (* (expt 2.0d0 (- e)) 2) 1 1 0 f e)
+                            (scale (* f 2 2) (* (expt 2.0d0 (- 1 e)) 2) 2 1 0 f e) ))
                        (:else
                         (if (= f *bot-f*)
                             (let ((be (expt 2 e)))
-                              (scale (* f be 2) 2.0 be be 0 f e) )
+                              (scale (* f be 2) 2.0d0 be be 0 f e) )
                             (let* ((be (expt 2 e)) (be1 (* be 2)))
-                              (scale (* f be1 2) (* 2.0 2) be1 be 0 f e) ))))))))
-        (labels ((write-fixed-rational(p prefix align)
+                              (scale (* f be1 2) (* 2.0d0 2) be1 be 0 f e) ))))))))
+        (labels ((write-fixed-rational (p prefix align)
                    (labels ((get-scale (q)
                               (expt base (- (integer-log q base) 1))))
                      (let ((n (numerator p))
@@ -1368,7 +1369,7 @@
                (write-char #\/ port)
                (wrap-sign (denominator n) nil nil #'write-real) )))
            (:else
-            (wrap-sign n sign? align #'write-real) )))
+            (wrap-sign n sign? align #'write-real))))
         (:else
          (wrap-sign (real-part n) sign? nil #'write-real)
          (wrap-sign imag T nil #'write-real)
