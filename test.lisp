@@ -201,49 +201,30 @@ world")))
   (iss "1 2 3" (fmt nil (fmt-join #'dsp '(1 2 3) " "))))
 
 
-#|(test |shared structures|
+(test |shared structures|
   (iss "#0=(1 . #0#)"
-       (fmt nil (wrt (let ((ones (list 1))) (set-cdr! ones ones) ones)))))|#
+       (fmt nil (wrt (let ((ones (list 1))) (set-cdr! ones ones) ones))) )
+  (iss "(0 . #0=(1 . #0#))"
+       (fmt nil (wrt (let ((ones (list 1)))
+                       (set-cdr! ones ones)
+                       (cons 0 ones) ))))
+  (iss "(SYM . #0=(SYM . #0#))"
+       (fmt nil (wrt (let ((syms (list 'sym)))
+                       (set-cdr! syms syms)
+                       (cons 'sym syms) ))))
+  (iss "(#0=(1 . #0#) #1=(2 . #1#))"
+       (fmt nil (wrt (let ((ones (list 1))
+                           (twos (list 2)) )
+                       (set-cdr! ones ones)
+                       (set-cdr! twos twos)
+                       (list ones twos) )))))
 
-#||
-
-;;
-
-
-(test "(0 . #0=(1 . #0#))"
-    (fmt nil (wrt (let ((ones (list 1)))
-                   (set-cdr! ones ones)
-                   (cons 0 ones)))))
-(test "(sym . #0=(sym . #0#))"
-    (fmt nil (wrt (let ((syms (list 'sym)))
-                   (set-cdr! syms syms)
-                   (cons 'sym syms)))))
-(test "(#0=(1 . #0#) #1=(2 . #1#))"
-    (fmt nil (wrt (let ((ones (list 1))
-                       (twos (list 2)))
-                   (set-cdr! ones ones)
-                   (set-cdr! twos twos)
-                   (list ones twos)))))
-||#
-
-#|(test |without shared detection|
+(test |without shared detection|
   (iss "(1 1 1 1 1"
        (fmt nil (trim/length
                  10
                  (wrt/unshared
-                  (let ((ones (list 1))) (set-cdr! ones ones) ones))))))|#
-
-#||
-;; without shared detection
-
- (test "(1 1 1 1 1 "
-    (fmt nil (trim/length
-             11
-             (wrt/unshared
-              (let ((ones (list 1))) (set-cdr! ones ones) ones)))))
-||#
-
-;;
+                  (let ((ones (list 1))) (set-cdr! ones ones) ones))))))
 
 (defmacro test-pretty (str)
   (let ((sexp (read-from-string str)))
@@ -279,53 +260,61 @@ world")))
   25 26 27 28 29 30 31 32 33 34 35 36 37)
 ")
 
-#|(test-pretty
- "(define (fold kons knil ls)
-  (define (loop ls acc)
-    (if (null? ls) acc (loop (cdr ls) (kons (car ls) acc))))
-  (loop ls knil))
-")|#
+(test-pretty
+ "(DEFINE (FOLD KONS KNIL LS)
+  (DEFINE (LOOP LS ACC)
+    (IF (NULL? LS) ACC (LOOP (CDR LS) (KONS (CAR LS) ACC))))
+  (LOOP LS KNIL))
+")
 
-#|(test-pretty
-"(do ((vec (make-vector 5)) (i 0 (+ i 1))) ((= i 5) vec) (vector-set! vec i i))\n")|#
+(test-pretty
+"(DO ((VEC (MAKE-VECTOR 5)) (I 0 (+ I 1))) ((= I 5) VEC) (VECTOR-SET! VEC I I))
+")
 
-;share..
-#|(test-pretty
-"(do ((vec (make-vector 5)) (i 0 (+ i 1))) ((= i 5) vec)
-  (vector-set! vec i 'supercalifrajalisticexpialidocious))\n")|#
+(test-pretty
+"(DO ((VEC (MAKE-VECTOR 5)) (I 0 (+ I 1))) ((= I 5) VEC)
+  (VECTOR-SET! VEC I (COMMON-LISP:QUOTE SUPERCALIFRAJALISTICEXPIALIDOCIOUS)))
+")
 
-#|(test-pretty
-"(do ((my-vector (make-vector 5)) (index 0 (+ index 1)))
-    ((= index 5) my-vector)
-  (vector-set! my-vector index index))\n")|#
+(test-pretty
+"(DO ((MY-VECTOR (MAKE-VECTOR 5)) (INDEX 0 (+ INDEX 1)))
+    ((= INDEX 5) MY-VECTOR)
+  (VECTOR-SET! MY-VECTOR INDEX INDEX))
+")
 
-#|(test-pretty
- "(define (fold kons knil ls)
-  (let loop ((ls ls) (acc knil))
-    (if (null? ls) acc (loop (cdr ls) (kons (car ls) acc)))))\n")|#
+(test-pretty
+ "(DEFINE (FOLD KONS KNIL LS)
+  (LET LOOP ((LS LS) (ACC KNIL))
+    (IF (NULL? LS) ACC (LOOP (CDR LS) (KONS (CAR LS) ACC)))))
+")
 
-#|(test-pretty
- "(define (file->sexp-list pathname)
-  (call-with-input-file pathname
-    (lambda (port)
-      (let loop ((res '()))
-        (let ((line (read port)))
-          (if (eof-object? line) (reverse res) (loop (cons line res))))))))\n")|#
+(test-pretty
+ "(DEFINE (FILE->SEXP-LIST PATHNAME)
+  (CALL-WITH-INPUT-FILE PATHNAME
+    (LAMBDA (PORT)
+      (LET LOOP ((RES (COMMON-LISP:QUOTE nil)))
+        (LET ((LINE (READ PORT)))
+          (IF (EOF-OBJECT? LINE) (REVERSE RES) (LOOP (CONS LINE RES))))))))
+")
 
-;stack overflow
-#|(test "(let ((ones '#0=(1 . #0#))) ones)\n"
-  (fmt nil (pretty (let ((ones (list 1))) (set-cdr! ones ones) `(let ((ones ',ones)) ones)))))|#
+(test |(let ((ones '#0=(1 . #0#))) ones)|
+  (iss
+   "(LET ((ONES (COMMON-LISP:QUOTE #0=(1 . #0#)))) ONES)
+"
+   (fmt nil (pretty (let ((ones (list 1))) (set-cdr! ones ones) `(let ((ones ',ones)) ones))))))
 
-#|(test
-"(let ((zeros '(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))
-      (ones '#0=(1 . #0#)))
-  (append zeros ones))\n"
-  (fmt nil (pretty
-             (let ((ones (list 1)))
-               (set-cdr! ones ones)
-               `(let ((zeros '(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))
-                      (ones ',ones))
-                  (append zeros ones))))))|#
+(test |(let ((zeros '(0...|
+  (iss "(LET ((ZEROS
+       (COMMON-LISP:QUOTE (0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)))
+      (ONES (COMMON-LISP:QUOTE #0=(1 . #0#))))
+  (APPEND ZEROS ONES))
+"
+       (fmt nil (pretty
+                 (let ((ones (list 1)))
+                   (set-cdr! ones ones)
+                   `(let ((zeros '(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))
+                          (ones ',ones))
+                      (append zeros ones)))))))
 
 (test |slashify|
   #|(iss "\"note\",\"very simple\",\"csv\",\"writer\",\"\"\"yay!\"\"\""
@@ -344,164 +333,165 @@ world")))
        )|#)
 
 
-#||
+
 ;; columnar formatting
-
-(test "abc\ndef\n" (fmt nil (fmt-columns (list #'dsp "abc\ndef\n"))))
-(test "abc123\ndef456\n" (fmt nil (fmt-columns (list dsp "abc\ndef\n") (list dsp "123\n456\n"))))
-(test "abc123\ndef456\n" (fmt nil (fmt-columns (list dsp "abc\ndef\n") (list dsp "123\n456"))))
-(test "abc123\ndef456\n" (fmt nil (fmt-columns (list dsp "abc\ndef") (list dsp "123\n456\n"))))
-(test "abc123\ndef456\nghi789\n"
-    (fmt nil (fmt-columns (list dsp "abc\ndef\nghi\n") (list dsp "123\n456\n789\n"))))
-(test "abc123wuv\ndef456xyz\n"
-    (fmt nil (fmt-columns (list dsp "abc\ndef\n") (list dsp "123\n456\n") (list dsp "wuv\nxyz\n"))))
-(test "abc  123\ndef  456\n"
-    (fmt nil (fmt-columns (list (cut pad/right 5 <>) "abc\ndef\n") (list dsp "123\n456\n"))))
-(test "ABC  123\nDEF  456\n"
-    (fmt nil (fmt-columns (list (compose upcase (cut pad/right 5 <>)) "abc\ndef\n")
-                         (list dsp "123\n456\n"))))
-(test "ABC  123\nDEF  456\n"
-    (fmt nil (fmt-columns (list (compose (cut pad/right 5 <>) upcase) "abc\ndef\n")
-                         (list dsp "123\n456\n"))))
-
-(test "hello\nworld\n" (fmt nil (with-width 8 (wrap-lines "hello world"))))
-(test "\n" (fmt nil (wrap-lines "    ")))
-
-(test          ;; test divide by zero error
- "The  quick
-brown  fox
-jumped
-over   the
-lazy dog
-"
- (fmt nil (with-width 10 (justify "The quick brown fox jumped over the lazy dog"))))
-
-(test "his message
-(http://lists.nongnu.org/archive/html/chicken-users/2010-10/msg00171.html)
-to the chicken-users
-(http://lists.nongnu.org/mailman/listinfo/chicken-users)\n"
-      (fmt nil (with-width 67 (wrap-lines "his message (http://lists.nongnu.org/archive/html/chicken-users/2010-10/msg00171.html) to the chicken-users (http://lists.nongnu.org/mailman/listinfo/chicken-users)"))))
-
-(test "The fundamental list iterator.
-Applies KONS to each element of
-LS and the result of the previous
-application, beginning with KNIL.
-With KONS as CONS and KNIL as '(),
-equivalent to REVERSE.
-"
-    (fmt nil (with-width 36 (wrap-lines "The fundamental list iterator.  Applies KONS to each element of LS and the result of the previous application, beginning with KNIL.  With KONS as CONS and KNIL as '(), equivalent to REVERSE."))))
-
-(test
-"The   fundamental   list   iterator.
-Applies  KONS  to  each  element  of
-LS  and  the  result of the previous
-application,  beginning  with  KNIL.
-With  KONS  as CONS and KNIL as '(),
-equivalent to REVERSE.
-"
-    (fmt nil (with-width 36 (justify "The fundamental list iterator.  Applies KONS to each element of LS and the result of the previous application, beginning with KNIL.  With KONS as CONS and KNIL as '(), equivalent to REVERSE."))))
-
-(test
-"(define (fold kons knil ls)          ; The fundamental list iterator.
-  (let lp ((ls ls) (acc knil))       ; Applies KONS to each element of
-    (if (null? ls)                   ; LS and the result of the previous
-        acc                          ; application, beginning with KNIL.
-        (lp (cdr ls)                 ; With KONS as CONS and KNIL as '(),
-            (kons (car ls) acc)))))  ; equivalent to REVERSE.
-"
-    (fmt nil (fmt-columns
-             (list
-              (cut pad/right 36 <>)
-              (with-width 36
-                (pretty '(define (fold kons knil ls)
-                           (let lp ((ls ls) (acc knil))
-                             (if (null? ls)
-                                 acc
-                                 (lp (cdr ls)
-                                     (kons (car ls) acc))))))))
-             (list
-              (cut cat " ; " <>)
-              (with-width 36
-                (wrap-lines "The fundamental list iterator.  Applies KONS to each element of LS and the result of the previous application, beginning with KNIL.  With KONS as CONS and KNIL as '(), equivalent to REVERSE."))))))
-
-(test
-"(define (fold kons knil ls)          ; The fundamental list iterator.
-  (let lp ((ls ls) (acc knil))       ; Applies KONS to each element of
-    (if (null? ls)                   ; LS and the result of the previous
-        acc                          ; application, beginning with KNIL.
-        (lp (cdr ls)                 ; With KONS as CONS and KNIL as '(),
-            (kons (car ls) acc)))))  ; equivalent to REVERSE.
-"
-    (fmt nil (with-width 76
-              (columnar
-               (pretty '(define (fold kons knil ls)
-                          (let lp ((ls ls) (acc knil))
-                            (if (null? ls)
-                                acc
-                                (lp (cdr ls)
-                                    (kons (car ls) acc))))))
-               " ; "
-               (wrap-lines "The fundamental list iterator.  Applies KONS to each element of LS and the result of the previous application, beginning with KNIL.  With KONS as CONS and KNIL as '(), equivalent to REVERSE.")))))
-
-(test
-"- Item 1: The text here is
-          indented according
-          to the space \"Item
-          1\" takes, and one
-          does not known what
-          goes here.
-"
-    (fmt nil (columnar 9 (dsp "- Item 1:") " " (with-width 20 (wrap-lines "The text here is indented according to the space \"Item 1\" takes, and one does not known what goes here.")))))
-
-(test
-"- Item 1: The text here is
-          indented according
-          to the space \"Item
-          1\" takes, and one
-          does not known what
-          goes here.
-"
-    (fmt nil (columnar 9 (dsp "- Item 1:\n") " " (with-width 20 (wrap-lines "The text here is indented according to the space \"Item 1\" takes, and one does not known what goes here.")))))
-
-(test
-"- Item 1: The text here is----------------------------------------------------
---------- indented according--------------------------------------------------
---------- to the space \"Item--------------------------------------------------
---------- 1\" takes, and one---------------------------------------------------
---------- does not known what-------------------------------------------------
---------- goes here.----------------------------------------------------------
-"
-    (fmt nil (pad-char #\- (columnar 9 (dsp "- Item 1:\n") " " (with-width 20 (wrap-lines "The text here is indented according to the space \"Item 1\" takes, and one does not known what goes here."))))))
-
-(test
-"a   | 123
-bc  | 45
-def | 6
-"
-    (fmt nil (with-width
-             20
-             (tabular (dsp "a\nbc\ndef\n") " | " (dsp "123\n45\n6\n")))))
-
-;; misc extras
-
-(define-function (string-hide-passwords str)
-  (string-substitute (regexp "(pass(?:w(?:or)?d)?\\s?[:=>]\\s+)\\S+" T)
-                     "\\1******"
-                     str
-                     T))
-
-(define hide-passwords
-  (make-string-fmt-transformer string-hide-passwords))
-
-(define (string-mangle-email str)
-  (string-substitute
-   (regexp "\\b([-+.\\w]+)@((?:[-+\\w]+\\.)+[a-z]{2,4})\\b" T)
-   "\\1 _at_ \\2"
-   str
-   T))
-
-(define mangle-email
-  (make-string-fmt-transformer string-mangle-email))
-
-(test-end)
+#||
+;|(test "abc\ndef\n" (fmt nil (fmt-columns (list #'dsp "abc\ndef\n"))))
+;|(test "abc\ndef\n" (fmt nil (fmt-columns (list #'dsp "abc\ndef\n"))))
+;|(test "abc123\ndef456\n" (fmt nil (fmt-columns (list dsp "abc\ndef\n") (list dsp "123\n456\n"))))
+;|(test "abc123\ndef456\n" (fmt nil (fmt-columns (list dsp "abc\ndef\n") (list dsp "123\n456"))))
+;|(test "abc123\ndef456\n" (fmt nil (fmt-columns (list dsp "abc\ndef") (list dsp "123\n456\n"))))
+;|(test "abc123\ndef456\nghi789\n"
+;|    (fmt nil (fmt-columns (list dsp "abc\ndef\nghi\n") (list dsp "123\n456\n789\n"))))
+;|(test "abc123wuv\ndef456xyz\n"
+;|    (fmt nil (fmt-columns (list dsp "abc\ndef\n") (list dsp "123\n456\n") (list dsp "wuv\nxyz\n"))))
+;|(test "abc  123\ndef  456\n"
+;|    (fmt nil (fmt-columns (list (cut pad/right 5 <>) "abc\ndef\n") (list dsp "123\n456\n"))))
+;|(test "ABC  123\nDEF  456\n"
+;|    (fmt nil (fmt-columns (list (compose upcase (cut pad/right 5 <>)) "abc\ndef\n")
+;|                         (list dsp "123\n456\n"))))
+;|(test "ABC  123\nDEF  456\n"
+;|    (fmt nil (fmt-columns (list (compose (cut pad/right 5 <>) upcase) "abc\ndef\n")
+;|                         (list dsp "123\n456\n"))))
+;|
+;|(test "hello\nworld\n" (fmt nil (with-width 8 (wrap-lines "hello world"))))
+;|(test "\n" (fmt nil (wrap-lines "    ")))
+;|
+;|(test          ;; test divide by zero error
+;| "The  quick
+;|brown  fox
+;|jumped
+;|over   the
+;|lazy dog
+;|"
+;| (fmt nil (with-width 10 (justify "The quick brown fox jumped over the lazy dog"))))
+;|
+;|(test "his message
+;|(http://lists.nongnu.org/archive/html/chicken-users/2010-10/msg00171.html)
+;|to the chicken-users
+;|(http://lists.nongnu.org/mailman/listinfo/chicken-users)\n"
+;|      (fmt nil (with-width 67 (wrap-lines "his message (http://lists.nongnu.org/archive/html/chicken-users/2010-10/msg00171.html) to the chicken-users (http://lists.nongnu.org/mailman/listinfo/chicken-users)"))))
+;|
+;|(test "The fundamental list iterator.
+;|Applies KONS to each element of
+;|LS and the result of the previous
+;|application, beginning with KNIL.
+;|With KONS as CONS and KNIL as '(),
+;|equivalent to REVERSE.
+;|"
+;|    (fmt nil (with-width 36 (wrap-lines "The fundamental list iterator.  Applies KONS to each element of LS and the result of the previous application, beginning with KNIL.  With KONS as CONS and KNIL as '(), equivalent to REVERSE."))))
+;|
+;|(test
+;|"The   fundamental   list   iterator.
+;|Applies  KONS  to  each  element  of
+;|LS  and  the  result of the previous
+;|application,  beginning  with  KNIL.
+;|With  KONS  as CONS and KNIL as '(),
+;|equivalent to REVERSE.
+;|"
+;|    (fmt nil (with-width 36 (justify "The fundamental list iterator.  Applies KONS to each element of LS and the result of the previous application, beginning with KNIL.  With KONS as CONS and KNIL as '(), equivalent to REVERSE."))))
+;|
+;|(test
+;|"(define (fold kons knil ls)          ; The fundamental list iterator.
+;|  (let lp ((ls ls) (acc knil))       ; Applies KONS to each element of
+;|    (if (null? ls)                   ; LS and the result of the previous
+;|        acc                          ; application, beginning with KNIL.
+;|        (lp (cdr ls)                 ; With KONS as CONS and KNIL as '(),
+;|            (kons (car ls) acc)))))  ; equivalent to REVERSE.
+;|"
+;|    (fmt nil (fmt-columns
+;|             (list
+;|              (cut pad/right 36 <>)
+;|              (with-width 36
+;|                (pretty '(define (fold kons knil ls)
+;|                           (let lp ((ls ls) (acc knil))
+;|                             (if (null? ls)
+;|                                 acc
+;|                                 (lp (cdr ls)
+;|                                     (kons (car ls) acc))))))))
+;|             (list
+;|              (cut cat " ; " <>)
+;|              (with-width 36
+;|                (wrap-lines "The fundamental list iterator.  Applies KONS to each element of LS and the result of the previous application, beginning with KNIL.  With KONS as CONS and KNIL as '(), equivalent to REVERSE."))))))
+;|
+;|(test
+;|"(define (fold kons knil ls)          ; The fundamental list iterator.
+;|  (let lp ((ls ls) (acc knil))       ; Applies KONS to each element of
+;|    (if (null? ls)                   ; LS and the result of the previous
+;|        acc                          ; application, beginning with KNIL.
+;|        (lp (cdr ls)                 ; With KONS as CONS and KNIL as '(),
+;|            (kons (car ls) acc)))))  ; equivalent to REVERSE.
+;|"
+;|    (fmt nil (with-width 76
+;|              (columnar
+;|               (pretty '(define (fold kons knil ls)
+;|                          (let lp ((ls ls) (acc knil))
+;|                            (if (null? ls)
+;|                                acc
+;|                                (lp (cdr ls)
+;|                                    (kons (car ls) acc))))))
+;|               " ; "
+;|               (wrap-lines "The fundamental list iterator.  Applies KONS to each element of LS and the result of the previous application, beginning with KNIL.  With KONS as CONS and KNIL as '(), equivalent to REVERSE.")))))
+;|
+;|(test
+;|"- Item 1: The text here is
+;|          indented according
+;|          to the space \"Item
+;|          1\" takes, and one
+;|          does not known what
+;|          goes here.
+;|"
+;|    (fmt nil (columnar 9 (dsp "- Item 1:") " " (with-width 20 (wrap-lines "The text here is indented according to the space \"Item 1\" takes, and one does not known what goes here.")))))
+;|
+;|(test
+;|"- Item 1: The text here is
+;|          indented according
+;|          to the space \"Item
+;|          1\" takes, and one
+;|          does not known what
+;|          goes here.
+;|"
+;|    (fmt nil (columnar 9 (dsp "- Item 1:\n") " " (with-width 20 (wrap-lines "The text here is indented according to the space \"Item 1\" takes, and one does not known what goes here.")))))
+;|
+;|(test
+;|"- Item 1: The text here is----------------------------------------------------
+;|--------- indented according--------------------------------------------------
+;|--------- to the space \"Item--------------------------------------------------
+;|--------- 1\" takes, and one---------------------------------------------------
+;|--------- does not known what-------------------------------------------------
+;|--------- goes here.----------------------------------------------------------
+;|"
+;|    (fmt nil (pad-char #\- (columnar 9 (dsp "- Item 1:\n") " " (with-width 20 (wrap-lines "The text here is indented according to the space \"Item 1\" takes, and one does not known what goes here."))))))
+;|
+;|(test
+;|"a   | 123
+;|bc  | 45
+;|def | 6
+;|"
+;|    (fmt nil (with-width
+;|             20
+;|             (tabular (dsp "a\nbc\ndef\n") " | " (dsp "123\n45\n6\n")))))
+;|
+;|;; misc extras
+;|
+;|(define-function (string-hide-passwords str)
+;|  (string-substitute (regexp "(pass(?:w(?:or)?d)?\\s?[:=>]\\s+)\\S+" T)
+;|                     "\\1******"
+;|                     str
+;|                     T))
+;|
+;|(define hide-passwords
+;|  (make-string-fmt-transformer string-hide-passwords))
+;|
+;|(define (string-mangle-email str)
+;|  (string-substitute
+;|   (regexp "\\b([-+.\\w]+)@((?:[-+\\w]+\\.)+[a-z]{2,4})\\b" T)
+;|   "\\1 _at_ \\2"
+;|   str
+;|   T))
+;|
+;|(define mangle-email
+;|  (make-string-fmt-transformer string-mangle-email))
+;|
+;|(test-end)
 ||#

@@ -1506,7 +1506,8 @@
            ((vector? obj)
             (let ((len (vector-length obj)))
               (do ((i 0 (+ i 1))) ((>= i len))
-                (walk (vector-ref obj i)))))))))
+                (let ((i i))
+                  (walk (vector-ref obj i))))))))))
     (hash-table-walk
      tab
      (lambda (obj count)
