@@ -32,4 +32,24 @@
 (defun make-eq?-table ()
   (make-hash-table #'eq?))
 
+
+(define-function (call-with-output-string proc)
+  (let ((out (open-output-string)))
+    (funcall proc out)
+    (get-output-string out)))
+
+(defun read-line (port)
+  (cl:read-line port nil (rnrs:eof-object) nil))
+
+(defun compose (&rest fns)
+  (if fns
+      (let ((fn1 (car (last fns)))
+            (fns (butlast fns)))
+        (lambda (&rest args)
+            (reduce #'funcall fns
+                    :from-end t
+                    :initial-value (apply fn1 args))))
+      #'identity))
+
+
 ;;; eof

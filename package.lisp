@@ -35,5 +35,5 @@
                           . #.(let ((ans '()))
                                 (do-external-symbols (s :srfi-13 ans)
                                   (push s ans))))
-  ;; (:shadow :assoc :lambda :loop)
+  (:shadow :read-line)
   (:shadowing-import-from :rnrs :string-append))
