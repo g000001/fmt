@@ -1484,9 +1484,6 @@
 (define-function (eq?-table-ref tab x) (hash-table-ref/default tab x nil))
 (define-function (eq?-table-set! tab x v) (hash-table-set! tab x v))
 
-(defun eof-object? (obj)
-  (eq :eof obj))
-
 ;; XXXX extend for records and other container data types
 (define-function (make-shared-ref-table obj)
   (let ((tab (make-eq?-table))          ;FIXME
