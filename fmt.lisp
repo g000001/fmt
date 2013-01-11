@@ -1550,16 +1550,21 @@
 ;;; sexp formatters
 
 (define-function (slashified str . o)
-  (let-optionals* o ((quot #\") (esc #\\) (rename (constantly nil)))
+  (destructuring-bind (&optional (quot #\")
+                                 (esc #\\ esc-p)
+                                 (rename (constantly nil))) o
     (lambda (st)
       (let* ((len (string-length str))
              (output (fmt-writer st))
              (quot-str (string quot))
-             (esc-str (if (char? esc) (string esc) (or esc quot-str))))
+             (esc-str (cond ((and esc-p (char? esc)) (string esc))
+                            ((and esc-p (null? esc)) quot-str)
+                            (:else esc))))
         (let lp ((i 0) (j 0) (st st))
           (labels ((collect ()
-                     (if (= i j) st (funcall
-                                     output (substring/shared str i j) st))))
+                     (if (= i j) 
+                         st
+                         (funcall output (substring/shared str i j) st))))
             (if (>= j len)
               (collect)
               (let ((c (string-ref str j)))
@@ -1583,7 +1588,9 @@
 ;; either the quote or escape char is present.
 
 (define-function (maybe-slashified str pred . o)
-  (let-optionals* o ((quot #\") (esc #\\) (rename (constantly nil)))
+  (destructuring-bind (&optional (quot #\")
+                                 (esc #\\ esc-p)
+                                 (rename (constantly nil))) o
     (flet ((esc? (c)
              (or (eqv? c quot) (eqv? c esc) (funcall rename c) (funcall pred c)) ))
       (if (string-index str #'esc?)
